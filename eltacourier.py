@@ -4,24 +4,45 @@ import shared
 
 class EltaCourier:
     def __init__(self, getaway :str="https://www.elta-courier.gr"):
-        with requests.Session() as rss:
-            self.rss = rss
-        self.shared = shared.Shared(
-            rss=self.rss
-        )
+        self.rss = requests.Session()
         self.config = { 
             "getaway": getaway if getaway and isinstance(getaway, str) else None,
             "headers": {
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36 Edg/106.0.1370.42"
             }  
         }
-        if hasattr(self, "rss") and self.rss and isinstance(self.rss, requests.Session) and \
-        hasattr(self, "config") and self.config and isinstance(self.config, dict) and \
-        "headers" in self.config and self.config["headers"] and isinstance(self.config["headers"], dict):
-            self.rss.headers.update(self.config["headers"])
+        self.rss.headers.update(self.config["headers"])
+    def close(self):
+        if self.rss != None:
+            self.rss.close()
+    def __enter__(self):
+        return self
+    def __exit__(**args):
+        self.close()
+        return True
+    @property
+    def validate(self):
+        return hasattr(self, "config") and self.config != None and isinstance(self.config, dict) and \
+        self.config.get("headers", None) != None and isinstance(self.config.get("headers", None), str)
+    def request(self, config :dict=None):
+        if data == None or isinstance(data, dict) == False:
+            return
+        return self.rss.request(
+            **config
+        )
+    def requestJson(self, config :dict=None):
+        if config == None or isinstance(config, dict) == False:
+            return
+        req = self.request(
+            config=config
+        )
+        if req.headers.get("Content-Type", None) == None or isinstance(req.headers.get("Content-Type", None), str) == False or req.headers.get("Content-Type") != "applicaton/json":
+            return
+        return json.loads(
+            s=req.content
+        )
     def track(self, number :(list,str)=None):
-        if hasattr(self, "config") and self.config and isinstance(self.config, dict) and \
-        "getaway" in self.config and self.config["getaway"] and isinstance(self.config["getaway"], str) and \
+        if self.validate and \
         number and (isinstance(number, str) or isinstance(number, list) and len(number) > 0):
             if isinstance(number, list):
                 number = "\n".join(number)
@@ -32,11 +53,9 @@ class EltaCourier:
                     "number": number
                 }
             }
-            data = json.loads(
-                s=self.rss.request(
-                    *self.shared.convert_json_to_values(
-                        config=config
-                    )
-                ).content
+            data = self.requestJson(
+                config=config
             )
-            return data["result"] if "result" in data and data["result"] else None
+            if data == None or isinstance(data, dict) == False:
+                return
+            return data.get("result", None)
