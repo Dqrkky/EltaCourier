@@ -1,5 +1,3 @@
-import requests
-import json
 import __http
 
 class EltaCourier(__http.Request):

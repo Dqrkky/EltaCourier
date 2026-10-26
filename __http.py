@@ -1,4 +1,5 @@
 import requests
+import json
 
 class Request:
     def __init__(self):
@@ -12,7 +13,7 @@ class Request:
         self.close()
         return True
     def request(self, config :dict | None=None):
-        if data == None or isinstance(data, dict) == False:
+        if config == None or isinstance(config, dict) == False:
             return
         return self.rss.request(
             **config
@@ -23,8 +24,8 @@ class Request:
         req = self.request(
             config=config
         )
-        if req.headers.get("Content-Type", None) == None or isinstance(req.headers.get("Content-Type", None), str) == False or req.headers.get("Content-Type") != "applicaton/json":
-            return
+        # if req.headers.get("Content-Type", None) == None or isinstance(req.headers.get("Content-Type", None), str) == False or req.headers.get("Content-Type") != "applicaton/json":
+        #     return
         return json.loads(
             s=req.content
         )
